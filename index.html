@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <title>Customer Churn Prediction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202b27;
+      --muted: #77817c;
+      --line: #e7ebe7;
+      --canvas: #f5f7f3;
+      --paper: #fff;
+      --forest: #173f35;
+      --forest-soft: #e6f0e9;
+      --lime: #d4f06a;
+      --lime-deep: #b9da47;
+      --coral: #e98068;
+      --coral-soft: #fff0eb;
+      --gold: #f2bd51;
+      --shadow: 0 14px 38px rgba(29, 47, 39, .055);
+      font-family: "DM Sans", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { min-height: 100vh; }
+    .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 5; display: flex; width: 236px; flex-direction: column; padding: 27px 17px 20px; color: #f7faf7; background: var(--forest); }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; color: var(--forest); background: var(--lime); }
+    .brand-mark svg { width: 21px; height: 21px; }
+    .brand-name { font: 800 14px/1.15 "Manrope", sans-serif; letter-spacing: 0; }
+    .brand-sub { margin-top: 3px; color: #a6bcb1; font-size: 10px; letter-spacing: .04em; }
+    .workspace { display: flex; align-items: center; justify-content: space-between; margin: 34px 2px 23px; padding: 10px 11px; border: 1px solid rgba(255,255,255,.13); border-radius: 8px; color: #e3ece6; font-size: 11px; }
+    .workspace span:last-child { color: #abc0b4; font-size: 10px; }
+    .nav-label { margin: 0 11px 10px; color: #90a99c; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .nav-list { display: grid; gap: 5px; }
+    .nav-link { display: flex; min-height: 41px; align-items: center; gap: 11px; padding: 0 11px; border-radius: 7px; color: #c3d2c9; font-size: 12px; text-decoration: none; transition: background .18s, color .18s; }
+    .nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,.11); }
+    .nav-link.active { box-shadow: inset 2px 0 var(--lime); }
+    .nav-link svg { width: 16px; height: 16px; flex: none; }
+    .sidebar-spacer { flex: 1; }
+    .model-note { display: flex; gap: 10px; padding: 13px 11px; border: 1px solid rgba(255,255,255,.13); border-radius: 8px; }
+    .status-dot { width: 8px; height: 8px; flex: none; margin-top: 4px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(212,240,106,.12); }
+    .model-note strong { display: block; font-size: 11px; font-weight: 600; }
+    .model-note small { display: block; margin-top: 4px; color: #a6bcb1; font-size: 10px; }
+    .sidebar-foot { padding: 16px 10px 0; color: #93aa9e; font-size: 10px; }
+    .main { max-width: 1600px; min-height: 100vh; margin-left: 236px; padding: 0 40px 44px; }
+    .topbar { display: flex; min-height: 71px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font-size: 11px; }
+    .breadcrumb strong { color: var(--ink); font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .date-label { color: var(--muted); font-size: 11px; }
+    .avatar { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: var(--forest); background: #e3eddf; font-size: 10px; font-weight: 700; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 28px 0 21px; }
+    .eyebrow { margin: 0 0 8px; color: #718078; font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font: 700 25px/1.2 "Manrope", sans-serif; letter-spacing: 0; }
+    .heading-copy { margin: 0; color: var(--muted); font-size: 12px; }
+    .heading-actions { display: flex; gap: 8px; }
+    .button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; color: #53615a; background: white; font-size: 11px; font-weight: 600; transition: transform .16s, border-color .16s, background .16s; }
+    .button:hover { transform: translateY(-1px); border-color: #bbc9bf; }
+    .button svg { width: 14px; height: 14px; }
+    .button-primary { border-color: var(--forest); color: white; background: var(--forest); }
+    .button-primary:hover { border-color: #245b4b; background: #245b4b; }
+    .button-primary:disabled { cursor: wait; opacity: .7; transform: none; }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 19px; }
+    .metric { position: relative; min-height: 95px; overflow: hidden; padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); box-shadow: 0 3px 11px rgba(29,47,39,.025); }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .metric-icon { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 7px; color: var(--forest); background: var(--forest-soft); }
+    .metric-icon.coral { color: #ad4c36; background: var(--coral-soft); }
+    .metric-icon.gold { color: #8d6717; background: #fff5dc; }
+    .metric-icon svg { width: 14px; height: 14px; }
+    .metric-value { margin: 8px 0 0; font: 700 21px/1 "Manrope", sans-serif; }
+    .metric-foot { margin-left: 7px; color: #8b9690; font-size: 9px; font-weight: 500; }
+    .work-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); align-items: start; gap: 15px; }
+    .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--paper); box-shadow: var(--shadow); }
+    .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 19px 15px; border-bottom: 1px solid #edf0ed; }
+    .panel-heading h2 { margin-bottom: 4px; font: 700 14px/1.3 "Manrope", sans-serif; letter-spacing: 0; }
+    .panel-heading p { margin: 0; color: var(--muted); font-size: 10px; }
+    .step-label { flex: none; padding: 5px 8px; border-radius: 5px; color: #65736b; background: #f2f5f1; font-size: 9px; font-weight: 600; }
+    .form-body { padding: 0 19px 18px; }
+    .form-section { padding-top: 15px; }
+    .section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 11px; color: #425149; font-size: 10px; font-weight: 700; }
+    .section-number { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 5px; color: var(--forest); background: var(--forest-soft); font-size: 9px; }
+    .fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 11px; }
+    .field { min-width: 0; }
+    .field label { display: block; margin: 0 0 5px; color: #67736d; font-size: 9px; font-weight: 600; }
+    .field select, .field input { width: 100%; height: 34px; padding: 0 9px; border: 1px solid #e2e8e3; border-radius: 5px; outline: none; color: #26342d; background-color: #fff; font-size: 10px; }
+    .field select:focus, .field input:focus { border-color: #759d7e; box-shadow: 0 0 0 3px rgba(89,139,103,.1); }
+    .form-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 17px; padding-top: 14px; border-top: 1px solid #edf0ed; }
+    .form-footnote { margin: 0; color: #929c96; font-size: 9px; }
+    .form-actions { display: flex; gap: 7px; }
+    .result-panel { position: sticky; top: 15px; overflow: hidden; }
+    .result-head { padding: 17px 18px 14px; border-bottom: 1px solid #edf0ed; }
+    .result-head-row { display: flex; align-items: center; justify-content: space-between; }
+    .result-head h2 { margin: 0; font: 700 14px/1.3 "Manrope", sans-serif; }
+    .result-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 5px; color: #707a74; background: #f2f4f1; font-size: 9px; font-weight: 700; }
+    .result-badge.high { color: #ad4c36; background: var(--coral-soft); }
+    .result-badge.low { color: #32654b; background: var(--forest-soft); }
+    .result-badge .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .result-content { padding: 17px 18px 19px; }
+    .risk-overview { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 15px; }
+    .risk-ring { --risk: 0deg; position: relative; display: grid; width: 92px; aspect-ratio: 1; place-items: center; border-radius: 50%; background: conic-gradient(var(--coral) var(--risk), #edf0ec 0); }
+    .risk-ring::before { position: absolute; width: 72px; aspect-ratio: 1; border-radius: 50%; background: white; content: ""; }
+    .ring-value { position: relative; z-index: 1; font: 800 21px/1 "Manrope", sans-serif; }
+    .ring-value small { display: block; margin-top: 4px; color: #8b9690; font: 600 8px/1 "DM Sans", sans-serif; text-align: center; }
+    .risk-copy strong { display: block; margin-bottom: 5px; font-size: 12px; }
+    .risk-copy p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .threshold-track { position: relative; height: 5px; margin: 18px 0 6px; border-radius: 5px; background: #edf0ec; }
+    .threshold-fill { width: 0; height: 100%; border-radius: inherit; background: var(--coral); transition: width .45s ease; }
+    .threshold-marker { position: absolute; top: -3px; left: 38%; width: 2px; height: 11px; background: #34433b; }
+    .threshold-labels { display: flex; justify-content: space-between; color: #8b9690; font-size: 8px; }
+    .result-section { margin-top: 19px; }
+    .result-section h3 { margin: 0 0 9px; color: #44514a; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .insight-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .insight-list li { display: flex; align-items: flex-start; gap: 8px; color: #5c6962; font-size: 10px; line-height: 1.45; }
+    .insight-mark { display: grid; width: 16px; height: 16px; flex: none; place-items: center; border-radius: 5px; color: #a75740; background: var(--coral-soft); font-size: 9px; }
+    .insight-mark.action { color: #38694d; background: var(--forest-soft); }
+    .empty-result { display: flex; min-height: 255px; flex-direction: column; align-items: center; justify-content: center; padding: 22px; text-align: center; }
+    .empty-icon { display: grid; width: 48px; height: 48px; margin-bottom: 12px; place-items: center; border: 1px solid #e4eae4; border-radius: 13px; color: #4b7659; background: #f4f8f1; }
+    .empty-icon svg { width: 22px; height: 22px; }
+    .empty-result strong { margin-bottom: 5px; font: 700 12px "Manrope", sans-serif; }
+    .empty-result p { max-width: 220px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .result-disclaimer { margin: 14px 0 0; padding: 9px 10px; border-radius: 5px; color: #758078; background: #f6f7f5; font-size: 8px; line-height: 1.5; }
+    .history-panel { margin-top: 15px; }
+    .history-panel .panel-heading { align-items: center; padding-top: 15px; padding-bottom: 13px; }
+    .history-panel .panel-heading h2 { margin: 0; }
+    .history-count { color: #89948d; font-size: 9px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 9px 18px; color: #89948d; background: #fafbf9; font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    td { padding: 10px 18px; border-top: 1px solid #f0f2ef; color: #4c5952; font-size: 10px; white-space: nowrap; }
+    .table-empty { padding: 18px; color: #8a958e; font-size: 10px; text-align: center; }
+    .table-risk { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+    .table-risk::before { width: 6px; height: 6px; border-radius: 50%; background: #74a17f; content: ""; }
+    .table-risk.high::before { background: var(--coral); }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 10; max-width: min(370px, calc(100vw - 36px)); padding: 12px 15px; border-radius: 7px; color: white; background: #253b31; box-shadow: var(--shadow); font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (min-width: 1500px) { .main { padding-right: 54px; padding-left: 54px; } .work-grid { grid-template-columns: minmax(0, 1.3fr) minmax(340px, .7fr); } }
+    @media (max-width: 1100px) { .main { padding-right: 24px; padding-left: 24px; } .work-grid { grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 11px; } .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 800px) { .sidebar { position: static; width: auto; height: auto; flex-direction: row; align-items: center; gap: 13px; padding: 12px 17px; } .workspace, .nav-label, .nav-list, .sidebar-spacer, .model-note, .sidebar-foot { display: none; } .brand { margin-right: auto; } .main { margin-left: 0; padding: 0 18px 30px; } .topbar { min-height: 53px; } .page-heading { padding-top: 22px; } .work-grid { grid-template-columns: 1fr; } .result-panel { position: static; } .empty-result { min-height: 180px; } }
+    @media (max-width: 520px) { .main { padding-right: 13px; padding-left: 13px; } .date-label { display: none; } .page-heading { align-items: flex-start; flex-direction: column; } .heading-actions { width: 100%; } .heading-actions .button { flex: 1; } .metrics { gap: 7px; } .metric { min-height: 82px; padding: 11px 10px; } .metric-top { align-items: flex-start; gap: 4px; font-size: 9px; } .metric-icon { width: 22px; height: 22px; } .metric-value { font-size: 18px; } .metric-foot { display: block; margin: 5px 0 0; font-size: 8px; } .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 8px; } .panel-heading, .form-body { padding-right: 13px; padding-left: 13px; } .form-footer { align-items: flex-start; flex-direction: column; } .form-actions { width: 100%; } .form-actions .button { flex: 1; } th, td { padding-right: 12px; padding-left: 12px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17.5 9 12l3.5 3.5L20 7"/><path d="M14.5 7H20v5.5"/></svg></div>
+        <div><div class="brand-name">Customer Churn</div><div class="brand-sub">PREDICTION DASHBOARD</div></div>
+      </div>
+      <div class="workspace"><span>Customer success</span><span>Workspace &#9662;</span></div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav-list">
+        <a class="nav-link active" href="#overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+        <a class="nav-link" href="#score-customer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1M19 8v6m3-3h-6"/></svg>Score a customer</a>
+        <a class="nav-link" href="#prediction-history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5m0 14h17M8 15l3-4 3 2 5-7"/></svg>Prediction history</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="model-note"><span class="status-dot"></span><div><strong id="sidebar-mode">Checking model</strong><small id="sidebar-threshold">Decision threshold</small></div></div>
+      <div class="sidebar-foot">Customer Churn Prediction &middot; 2026</div>
+    </aside>
+
+    <main class="main" id="overview">
+      <header class="topbar">
+        <div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong>Overview</strong></div>
+        <div class="topbar-right"><span class="date-label" id="today-label"></span><span class="avatar" aria-label="Customer success team">CS</span></div>
+      </header>
+      <section class="page-heading">
+        <div><p class="eyebrow">Customer intelligence</p><h1>Customer Churn Prediction</h1><p class="heading-copy">Understand account risk and turn signals into timely action.</p></div>
+        <div class="heading-actions">
+          <button class="button" id="export-button" type="button" title="Export scored customers as CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m-5-5 5 5 5-5M5 20h14"/></svg>Export report</button>
+          <button class="button button-primary" type="button" onclick="document.querySelector('#score-customer').scrollIntoView({behavior:'smooth'})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14m-7-7h14"/></svg>New assessment</button>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Session metrics">
+        <article class="metric"><div class="metric-top"><span>Customers assessed</span><span class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1.3a6.5 6.5 0 0 1 13 0V20m1-15.5a3.5 3.5 0 0 1 0 6.8m2 3.2a5.5 5.5 0 0 1 3 5v.5"/></svg></span></div><p class="metric-value" id="assessed-count">0<span class="metric-foot">this session</span></p></article>
+        <article class="metric"><div class="metric-top"><span>High-risk accounts</span><span class="metric-icon coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg></span></div><p class="metric-value" id="high-risk-count">0<span class="metric-foot">above threshold</span></p></article>
+        <article class="metric"><div class="metric-top"><span>Average churn risk</span><span class="metric-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18V6m0 12h16M7 15l4-4 3 2 5-6"/></svg></span></div><p class="metric-value" id="average-risk">--<span class="metric-foot">assessed accounts</span></p></article>
+      </section>
+
+      <section class="work-grid">
+        <article class="panel" id="score-customer">
+          <div class="panel-heading"><div><h2>Customer profile</h2><p>Account attributes for an individual risk assessment</p></div><span class="step-label">TELCO PROFILE</span></div>
+          <form id="customer-form" class="form-body">
+            <div class="form-section">
+              <h3 class="section-title"><span class="section-number">01</span>Customer &amp; tenure</h3>
+              <div class="fields">
+                <div class="field"><label for="gender">Gender</label><select id="gender" name="gender"><option>Female</option><option>Male</option></select></div>
+                <div class="field"><label for="senior">Senior citizen</label><select id="senior" name="SeniorCitizen"><option value="0">No</option><option value="1">Yes</option></select></div>
+                <div class="field"><label for="tenure">Tenure (months)</label><input id="tenure" name="tenure" type="number" min="0" max="120" value="4" required></div>
+                <div class="field"><label for="partner">Has partner</label><select id="partner" name="Partner"><option>No</option><option>Yes</option></select></div>
+                <div class="field"><label for="dependents">Has dependents</label><select id="dependents" name="Dependents"><option>No</option><option>Yes</option></select></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="section-title"><span class="section-number">02</span>Services &amp; support</h3>
+              <div class="fields">
+                <div class="field"><label for="phone">Phone service</label><select id="phone" name="PhoneService"><option>Yes</option><option>No</option></select></div>
+                <div class="field"><label for="lines">Multiple lines</label><select id="lines" name="MultipleLines"><option>No</option><option>Yes</option><option>No phone service</option></select></div>
+                <div class="field"><label for="internet">Internet service</label><select id="internet" name="InternetService"><option>Fiber optic</option><option>DSL</option><option>No</option></select></div>
+                <div class="field"><label for="security">Online security</label><select id="security" name="OnlineSecurity"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+                <div class="field"><label for="backup">Online backup</label><select id="backup" name="OnlineBackup"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+                <div class="field"><label for="device">Device protection</label><select id="device" name="DeviceProtection"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+                <div class="field"><label for="support">Tech support</label><select id="support" name="TechSupport"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+                <div class="field"><label for="tv">Streaming TV</label><select id="tv" name="StreamingTV"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+                <div class="field"><label for="movies">Streaming movies</label><select id="movies" name="StreamingMovies"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="section-title"><span class="section-number">03</span>Contract &amp; billing</h3>
+              <div class="fields">
+                <div class="field"><label for="contract">Contract</label><select id="contract" name="Contract"><option>Month-to-month</option><option>One year</option><option>Two year</option></select></div>
+                <div class="field"><label for="paperless">Paperless billing</label><select id="paperless" name="PaperlessBilling"><option>Yes</option><option>No</option></select></div>
+                <div class="field"><label for="payment">Payment method</label><select id="payment" name="PaymentMethod"><option>Electronic check</option><option>Mailed check</option><option>Bank transfer (automatic)</option><option>Credit card (automatic)</option></select></div>
+                <div class="field"><label for="monthly">Monthly charges ($)</label><input id="monthly" name="MonthlyCharges" type="number" min="0" step="0.01" value="89.10" required></div>
+                <div class="field"><label for="total">Total charges ($)</label><input id="total" name="TotalCharges" type="number" min="0" step="0.01" value="350.00" required></div>
+              </div>
+            </div>
+            <div class="form-footer"><p class="form-footnote">Assessment uses the configured model threshold.</p><div class="form-actions"><button class="button" id="reset-button" type="reset">Reset</button><button class="button button-primary" id="score-button" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18V6m0 12h16M7 15l4-4 3 2 5-6"/></svg>Score customer</button></div></div>
+          </form>
+        </article>
+
+        <aside class="panel result-panel" aria-live="polite">
+          <div class="result-head"><div class="result-head-row"><h2>Risk assessment</h2><span class="result-badge" id="risk-badge"><span class="badge-dot"></span>Awaiting profile</span></div></div>
+          <div class="result-content" id="result-content">
+            <div class="empty-result"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V6m0 12h16M7 15l4-4 3 2 5-6"/><circle cx="7" cy="15" r="1"/><circle cx="11" cy="11" r="1"/></svg></div><strong>Your next account, in focus</strong><p>Complete a customer profile to see a churn-risk estimate and retention priorities.</p></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel history-panel" id="prediction-history">
+        <div class="panel-heading"><div><h2>Recent assessments</h2></div><span class="history-count" id="history-count">0 records</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Assessed</th><th>Customer profile</th><th>Contract</th><th>Monthly</th><th>Churn probability</th><th>Risk</th></tr></thead><tbody id="history-body"><tr><td class="table-empty" colspan="6">No assessments in this session</td></tr></tbody></table></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script>
+    const form = document.querySelector('#customer-form');
+    const history = [];
+    let threshold = 0.38;
+    let toastTimer;
+
+    document.querySelector('#today-label').textContent = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date());
+
+    function showToast(message) {
+      const toast = document.querySelector('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    }
+
+    async function checkHealth() {
+      const modeLabel = document.querySelector('#sidebar-mode');
+      try {
+        const response = await fetch('/api/health');
+        if (!response.ok) throw new Error('API unavailable');
+        const data = await response.json();
+        threshold = data.threshold;
+        modeLabel.textContent = data.mode === 'model' ? 'Model connected' : 'Demo scoring';
+        document.querySelector('#sidebar-threshold').textContent = `Threshold ${(threshold * 100).toFixed(0)}%`;
+        document.querySelector('.threshold-marker')?.style.setProperty('left', `${threshold * 100}%`);
+      } catch {
+        modeLabel.textContent = 'API unavailable';
+        document.querySelector('#sidebar-threshold').textContent = 'Start the FastAPI server';
+      }
+    }
+
+    function readCustomer() {
+      const data = new FormData(form);
+      return {
+        gender: data.get('gender'),
+        SeniorCitizen: Number(data.get('SeniorCitizen')),
+        Partner: data.get('Partner'),
+        Dependents: data.get('Dependents'),
+        tenure: Number(data.get('tenure')),
+        PhoneService: data.get('PhoneService'),
+        MultipleLines: data.get('MultipleLines'),
+        InternetService: data.get('InternetService'),
+        OnlineSecurity: data.get('OnlineSecurity'),
+        OnlineBackup: data.get('OnlineBackup'),
+        DeviceProtection: data.get('DeviceProtection'),
+        TechSupport: data.get('TechSupport'),
+        StreamingTV: data.get('StreamingTV'),
+        StreamingMovies: data.get('StreamingMovies'),
+        Contract: data.get('Contract'),
+        PaperlessBilling: data.get('PaperlessBilling'),
+        PaymentMethod: data.get('PaymentMethod'),
+        MonthlyCharges: Number(data.get('MonthlyCharges')),
+        TotalCharges: Number(data.get('TotalCharges'))
+      };
+    }
+
+    function renderResult(result) {
+      const percent = result.probability * 100;
+      const high = result.risk === 'High';
+      const badge = document.querySelector('#risk-badge');
+      badge.className = `result-badge ${high ? 'high' : 'low'}`;
+      badge.innerHTML = `<span class="badge-dot"></span>${result.risk} risk`;
+      const content = document.querySelector('#result-content');
+      content.innerHTML = `
+        <div class="risk-overview">
+          <div class="risk-ring" style="--risk:${percent * 3.6}deg"><div class="ring-value">${percent.toFixed(1)}%<small>CHURN RISK</small></div></div>
+          <div class="risk-copy"><strong>${high ? 'Retention attention recommended' : 'Account is below the risk threshold'}</strong><p>${high ? 'This profile exceeds the current decision threshold. Prioritize a timely outreach.' : 'Keep service quality consistent and revisit at the next renewal.'}</p></div>
+        </div>
+        <div class="threshold-track"><div class="threshold-fill" style="width:${Math.min(percent, 100)}%;background:${high ? 'var(--coral)' : 'var(--forest)'}"></div><span class="threshold-marker" style="left:${result.threshold * 100}%"></span></div>
+        <div class="threshold-labels"><span>0%</span><span>Decision threshold ${Math.round(result.threshold * 100)}%</span><span>100%</span></div>
+        <section class="result-section"><h3>Key signals</h3><ul class="insight-list">${result.drivers.map(item => `<li><span class="insight-mark">!</span>${escapeHtml(item)}</li>`).join('')}</ul></section>
+        <section class="result-section"><h3>Suggested next steps</h3><ul class="insight-list">${result.actions.map(item => `<li><span class="insight-mark action">&#8599;</span>${escapeHtml(item)}</li>`).join('')}</ul></section>
+        ${result.mode === 'demo' ? '<p class="result-disclaimer">Demo estimate: no trained model artifact is connected. Connect your saved model before using scores for customer decisions.</p>' : ''}`;
+    }
+
+    function renderHistory() {
+      const body = document.querySelector('#history-body');
+      document.querySelector('#history-count').textContent = `${history.length} ${history.length === 1 ? 'record' : 'records'}`;
+      if (!history.length) {
+        body.innerHTML = '<tr><td class="table-empty" colspan="6">No assessments in this session</td></tr>';
+      } else {
+        body.innerHTML = history.slice(0, 8).map(row => `<tr><td>${row.time}</td><td>${escapeHtml(row.customer.gender)} &middot; ${row.customer.tenure} mo.</td><td>${escapeHtml(row.customer.Contract)}</td><td>$${row.customer.MonthlyCharges.toFixed(2)}</td><td>${(row.result.probability * 100).toFixed(1)}%</td><td><span class="table-risk ${row.result.risk === 'High' ? 'high' : ''}">${row.result.risk}</span></td></tr>`).join('');
+      }
+      document.querySelector('#assessed-count').innerHTML = `${history.length}<span class="metric-foot">this session</span>`;
+      const highRisk = history.filter(row => row.result.risk === 'High').length;
+      document.querySelector('#high-risk-count').innerHTML = `${highRisk}<span class="metric-foot">above threshold</span>`;
+      const average = history.length ? history.reduce((sum, row) => sum + row.result.probability, 0) / history.length : null;
+      document.querySelector('#average-risk').innerHTML = `${average === null ? '--' : `${(average * 100).toFixed(1)}%`}<span class="metric-foot">assessed accounts</span>`;
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const button = document.querySelector('#score-button');
+      button.disabled = true;
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9" stroke-dasharray="30 20"/></svg>Scoring…';
+      try {
+        const customer = readCustomer();
+        const response = await fetch('/api/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(customer) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.detail || 'Prediction request failed.');
+        renderResult(result);
+        history.unshift({ customer, result, time: new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date()) });
+        renderHistory();
+        showToast(result.mode === 'demo' ? 'Demo estimate generated. Connect a trained model for production scoring.' : 'Customer risk assessment complete.');
+      } catch (error) {
+        showToast(error.message || 'Could not reach the prediction service.');
+      } finally {
+        button.disabled = false;
+        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18V6m0 12h16M7 15l4-4 3 2 5-6"/></svg>Score customer';
+      }
+    });
+
+    document.querySelector('#reset-button').addEventListener('click', () => {
+      setTimeout(() => {
+        document.querySelector('#risk-badge').className = 'result-badge';
+        document.querySelector('#risk-badge').innerHTML = '<span class="badge-dot"></span>Awaiting profile';
+        document.querySelector('#result-content').innerHTML = '<div class="empty-result"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V6m0 12h16M7 15l4-4 3 2 5-6"/></svg></div><strong>Your next account, in focus</strong><p>Complete a customer profile to see a churn-risk estimate and retention priorities.</p></div>';
+      }, 0);
+    });
+
+    document.querySelector('#export-button').addEventListener('click', () => {
+      if (!history.length) return showToast('Score a customer before exporting a report.');
+      const headers = ['assessed_at', 'gender', 'tenure_months', 'contract', 'monthly_charges', 'churn_probability', 'risk'];
+      const lines = history.map(row => [row.time, row.customer.gender, row.customer.tenure, row.customer.Contract, row.customer.MonthlyCharges, (row.result.probability * 100).toFixed(1) + '%', row.result.risk].map(value => `"${String(value).replaceAll('"', '""')}"`).join(','));
+      const blob = new Blob([[headers.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'retention-assessments.csv';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    checkHealth();
+  </script>
+</body>
+</html>
